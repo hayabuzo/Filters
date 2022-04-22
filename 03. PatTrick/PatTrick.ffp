@@ -1,0 +1,250 @@
+%FFP  
+
+Category: "hayabuzo.me" 
+Title: "PatTrick"
+Author: "Sergey Egorov" 
+Copyright: "2016, hayabuzo@gmail.com" 
+Version: "v1.0"
+Description: "pattern effects"  
+About: "www.hayabuzo.me" 
+
+
+Dialog: 
+Size=(420,348),
+Text="!T !V",
+Color=#dad9d7
+
+ctl[CTL_PREVIEW]: MODIFY, size=(420,280), pos=(0,0)
+ctl[CTL_OK]: MODIFY, pos=(335,328) 
+ctl[CTL_CANCEL]: MODIFY, pos=(375,328)
+ctl[CTL_ZOOM]: NONE
+ctl[CTL_PROGRESS]: NONE
+
+ctl(0):"Size",range=(0,100),val=20, pos=(25,291), size=(140,14), color=#97a196
+ctl(1):"Step",range=(0,20),val=2, pos=(25,308), size=(140,14), color=#697374
+
+ctl(12): COMBOBOX, "Square\nCircle", pos=(5,328), val=0, size=(50,*), Action=PREVIEW
+ctl(10): COMBOBOX, "Mosaic mode\nPattern mode\nLine mode\nNightmare mode\nPixel mode", pos=(60,328), 
+val=0, size=(70,*), Action=PREVIEW
+
+ctl(7): CHECKBOX, "Alt", val=0, pos=(200,294), size=(30,*)
+ctl(8): CHECKBOX, "Short", val=0, pos=(200,311), size=(30,*)
+
+ctl(17): CHECKBOX(PUSHLIKE), "Blur", val=0, pos=(135,328), size=(25,13)
+ctl(6): CHECKBOX(PUSHLIKE), "Break", val=0, pos=(160,328), size=(30,13)
+ctl(18): CHECKBOX(PUSHLIKE), "Mix", val=0, pos=(189,328), size=(25,13)
+
+ctl(14): STATICTEXT, Text="H-Shift:", pos=(243,294)
+ctl(15): STATICTEXT, Text="V-Shift:", pos=(244,310)
+
+ctl(2): TRACKBAR(TOPTIP),range=(-20,20),val=0, pos=(266,292), size=(100,14), Color=#dad9d7 
+ctl(3): TRACKBAR(TOPTIP),range=(-20,20),val=0, pos=(266,308), size=(100,14), Color=#dad9d7 
+
+ctl(4): COMBOBOX, "Red\nGreen\nBlue", pos=(370,293), val=0, size=(40,*), Action=PREVIEW
+ctl(5): COMBOBOX, "Red\nGreen\nBlue", pos=(370,309), val=1, size=(40,*), Action=PREVIEW
+
+ctl(13): STATICTEXT, Text="www.hayabuzo.me", pos=(225,330), fontcolor=#5c6654
+
+ctl(16): PUSHBUTTON, "Reset", pos=(295,328)
+
+
+// ************************************************************************
+
+OnFilterStart:
+{ 
+setCtlPos(CTL_PREVIEW, -1, -1, 420, 280);
+setCtlPos(CTL_ZOOM, 800, 800, 0, 0);
+setCtlPos(CTL_PROGRESS, 800, 800, 0, 0);
+setZoom(1);
+return false; 
+} 
+
+R,G,B: // ******************************************************************
+
+put(val(0,0,X/4)+get(2)*ctl(6)/12,0),				//включение break режима, изменяющего размер ячейки по матрице отклонений
+put(
+ctl(8)?ctl(1):val(0,0,X/4)*ctl(1)/2				//включение short режима для задания шага в пикселях
+,1),	
+
+// ---------------------------
+
+put(									//рисование больших окружностей
+c2m(
+x%get(0)*2-get(0),
+y%get(0)*2-get(0)
+),10),
+
+put(									//рисование малых окружностей
+c2m(
+(x+get(0)/2)%get(0)*2-get(0),
+(y+get(0)/2)%get(0)*2-get(0)
+),11),
+
+
+put(						//создаем матрицу отклонений для значений X
+scl(							
+phaseshift(
+	
+	ctl(12)==0?				//режим квадрата?
+	src(						//рисуем матрицу квадрата
+	x-x%get(0),				
+	y-y%get(0),				
+	ctl(4)) 					//в выбранном канале
+	:						//иначе, режим круга?
+	get(10)
+	<get(0)					//большой круг попадает в радиус? 
+	|						//и
+	get(11)					//малый круг попадает в треть радиуса?
+	<get(0)/3
+	?						//тогда
+	(src(					//внутри кругов та же матрица отклонений, что и в квадрате
+	x-x%get(0),
+	y-y%get(0),
+	ctl(4)))					//в выбранном канале
+	:0						//иначе, вне кругов, отклонение равно нулю
+
+,256-get(1)),					//изменение фазы матрицы отклонений для большей случайности
+0,255,-get(1),get(1))			//масштабирование значений матрицы отклонений до величины +/- distance
+,2),							//создана матрица отклонений по X
+
+// --------------------------
+
+put(						//аналогично создаем матрицу отклонений по Y в другом канале, чтобы сдвиги были не строго диагональными
+scl(
+phaseshift(
+
+	ctl(12)==0?
+	src(						
+	x-x%get(0),	
+	y-y%get(0),
+	ctl(5)) 
+	:
+	get(10)
+	<get(0)
+	|
+	get(11)
+	<get(0)/3
+	?
+	(src(
+	x-x%get(0),
+	y-y%get(0),
+	ctl(5)))
+	:0
+
+
+,512-get(1)),					//фаза тоже отличается от X для большей случайности, это поможет при выборе одинаковых каналов
+0,255,-get(1),get(1))
+,3),							
+
+put(ctl(17)*scl(get(2),-get(1),get(1),-5,5),69),			//создание матриц для блюра по осям Х и У
+put(ctl(17)*scl(get(3),-get(1),get(1),-5,5),70),
+
+put(ctl(18)*scl(get(2),-get(1),get(1),0,10),71),			//создание матриц для бленда по осям Х и У
+put(ctl(18)*scl(get(3),-get(1),get(1),0,10),72),
+
+// ------------------------------------- MOSAIC MODE
+
+ctl(10)==0?				
+pset(x,y,z,
+	src(
+	x-(1-ctl(7)*2)*get(2)-ctl(2),					// (1-ctl(7)*2) включает анти-режим, ctl(2) выравнивает по Х
+	y-(1-ctl(7)*2)*get(3)-val(3,-get(1),get(1)),	// val(3,-get(1),get(1) выравниваение по Y должно зависеть от дистанции
+	z)		
+)
+:
+
+// ------------------------------------- PATTERN MODE
+
+ctl(10)==1?					
+pset(x,y,z,
+	pget(
+	x-(1-ctl(7)*2)*get(2)-ctl(2),					// формула аналогична, глич создается благодаря замене src на pget
+	y-(1-ctl(7)*2)*get(3)-val(3,-get(1),get(1)),
+	z)		
+)
+:
+
+// ------------------------------------- LINE MODE
+
+ctl(10)==2?	
+pset(x,y,z,
+	pget(
+	x-(1-ctl(7)*2)*get(2)-ctl(2),
+	y-(1-ctl(7)*2)*get(3)-val(3,-get(1),get(1)),
+	z)),
+pset(x-y%get(0),y+x%get(0),z,pget(x+y%get(0),y-x%get(0),z)),
+pget(
+	x,
+	y,
+	z)
+:
+
+// ------------------------------------- NIGHTMARE MODE
+
+ctl(10)==3?		
+pset(x,y,z,
+	pget(
+	x-(1-ctl(7)*2)*get(2)-ctl(2),
+	y-(1-ctl(7)*2)*get(3)-val(3,-get(1),get(1)),
+	z)),
+pset(x,y,z,
+	pget(
+	x-x%pget(x,y,ctl(4))/40,
+	y-y%pget(x,y,ctl(5))/40,
+	z))
+:
+
+// ------------------------------------- PIXEL MODE
+
+ctl(10)==4?				
+pset(x,y,z,
+src(
+	x-(1-ctl(7)*2)*get(2)-ctl(2),
+	y-(1-ctl(7)*2)*get(3)-val(3,-get(1),get(1)),
+	z)),
+pset(x,y,z,
+	pget(
+	x-x%get(2), 
+	y-y%get(3),
+	z))
+:
+0,
+
+ctl(17)?
+
+pset(x,y,z,						//блюр
+(pget(x+get(69),y,z)
++pget(x,y+get(70),z)
++pget(x+get(69),y+get(70),z)
++pget(x,y,z))/4)
+
+:pget(x,y,z),
+
+ctl(18)?
+
+pset(x,y,z,						//бленды
+blend(c,
+pget(x,y,z),
+z,
+get(71)+get(72),
+//ctl(2),
+255))
+
+:pget(x,y,z)
+
+// ***************************************************************
+
+ForEveryTile:
+{ 
+
+	if (ctl(16)) 		
+	{
+	setCtlVal(2,0);   
+	setCtlVal(3,0);  
+	setCtlVal(19,100);
+	setCtlVal(16,0); 			
+	}
+return false; 			
+}
+
+

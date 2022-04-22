@@ -1,0 +1,205 @@
+%FFP
+
+Category: "hayabuzo.me" 
+Title: "WindyPixel"
+Author: "Sergey Egorov" 
+Copyright: "2016, hayabuzo@gmail.com" 
+Version: "v1.0" 
+Description: "wind and gravity effects" 
+About: "www.hayabuzo.me"
+
+Dialog: 
+Size=(490,180), 
+Text="!T Filter !V" ,
+Gradient=(#dad9d7, #c5c5c5, v)
+
+ctl(12): COMBOBOX, "Wind\nGravity", pos=(340,8), val=0, size=(60,*), Action=PREVIEW
+ctl(4): CHECKBOX(PUSHLIKE), "Soft", val=1, pos=(370,28), Action=PREVIEW, size=(30,15)
+ctl(22): PUSHBUTTON, "Random", pos=(365,50)
+ctl(13): CHECKBOX(PUSHLIKE), "Mass", val=1, pos=(335,104), size=(34,15), Action=PREVIEW
+
+ctl(1):STANDARD(HORZ), Text="&A",range=(20,-20),val=0, pos=(250,125), color=#31bcad
+ctl(2):STANDARD(HORZ), Text="&B",range=(20,-20),val=0, pos=(250,135), color=#00a886
+ctl(3):STANDARD(HORZ), Text="&C",range=(20,-20),val=0, pos=(250,145), color=#008e83
+ctl(0):STANDARD(HORZ), Text="&H-Boost",range=(1,9),val=5, pos=(270,160), size=(50,15),
+color=#00a886
+
+ctl(5):STANDARD(VERT), Text="&X",range=(20,-20),val=0, pos=(265,20), color=#00aeef
+ctl(6):STANDARD(VERT), Text="&Y",range=(20,-20),val=0, pos=(290,20), color=#0093d8
+ctl(7):STANDARD(VERT), Text="&Z",range=(20,-20),val=0, pos=(315,20), color=#006cb7
+ctl(10):STANDARD(VERT), Text="&V-Boost",range=(9,1),val=5, pos=(340,40), size=(15,50),
+color=#0093d8
+
+ctl(11): COMBOBOX, "Normal\nDissolve\nThreshold\nThreshold 2\nMultiply\nScreen\nOverlay\nSoft Light\nHard Light\nDodge\nBurn\nDarken\nLighten\nExclusion\nDifference\nNegDif 1\nNegDif 2\nSubtract\nAdd\nExpose", 
+pos=(415,18), val=0, size=(60,*), Action=PREVIEW
+ctl(15): TRACKBAR(TOPTIP) ,range=(0,100),val=100, pos=(410,33), size=(70,15), color=#d8d7d5
+ctl(8): CHECKBOX, "Alpha Mode", val=1, pos=(415,50), Action=PREVIEW//, color=#d5d4d2
+ctl[18]: GROUPBOX, " Blending ", Size=(75,60), pos=(408,5), color=#dad9d7
+
+ctl[23]: GROUPBOX(CENTER), " Random Options ", Size=(104,40), pos=(378,70), 
+color=#d1d1d1
+ctl(24): CHECKBOX, "Controls", val=1, pos=(385,84), size=(40,*)
+ctl(25): CHECKBOX, "Acids", val=0, pos=(385,95), size=(40,*)
+ctl(26): CHECKBOX, "Blend", val=1, pos=(435,84), size=(40,*)
+ctl(27): CHECKBOX, "Opacity", val=0, pos=(435,95), size=(40,*)
+
+ctl(19): STATICTEXT, Text=" Acid Noise:       Color Shift:", pos=(385,125), Action=PREVIEW
+ctl(20): TRACKBAR(TOPTIP), range=(0,100),val=0, pos=(380,136), size=(50,15), color=#c9c9c9
+ctl(14): TRACKBAR(TOPTIP), range=(0,25),val=0, pos=(430,136), size=(50,15), color=#c9c9c9
+ctl[21]: GROUPBOX(CENTER), " Acid FX ", Size=(104,40), pos=(378,115), color=#cccccc
+
+ctl(9): PUSHBUTTON, "Reset", pos=(370,160)
+
+ctl[CTL_OK]: MODIFY, "Apply", pos=(408,160)
+
+ctl(16): STATICTEXT, Text="www.hayabuzo.me", pos=(155,165), fontcolor=#5c6654
+
+// *****************************************************************************
+
+
+R,G,B:
+
+ctl(13)?			// MASS ON?
+put(128,9)
+:put(0,9),		
+
+				// COLOR NOISES
+
+put((ctl(14)==0?r:r+c%(ctl(14)*10))+(c%u*ctl(20)-c%v*ctl(20)),10),
+put((ctl(14)==0?g:g+c%(ctl(14)*10))+(c%u*ctl(20)-c%v*ctl(20)),11),
+put((ctl(14)==0?b:b+c%(ctl(14)*10))+(c%u*ctl(20)-c%v*ctl(20)),12),
+
+ctl(12) == 0? 	// WIND MODE ON?
+
+put((10-ctl(0))*1000,0),
+put((10-ctl(10))*1000,8),
+
+put(x+((128+get(10)-get(9))*ctl(1)+(128+get(11)-get(9))*ctl(2)+(128+get(12)-get(9))*ctl(3))*X/get(0),1),
+put(y+((128+get(10)-get(9))*ctl(5)+(128+get(11)-get(9))*ctl(6)+(128+get(12)-get(9))*ctl(7))*Y/get(8),2)
+
+
+: ctl(12) == 1?	// EXPLOSION MODE ON?
+
+put((10-ctl(0))*500,0),
+put((10-ctl(10))*500,8),
+
+ctl(0)>=5?		// EXPLOSION IN
+
+put(x
++((scl(ctl(1),20,-20,0,X)-x)*(get(10)-get(9))
++(scl(ctl(2),20,-20,0,X)-x)*(get(11)-get(9))
++(scl(ctl(3),20,-20,0,X)-x)*(get(12)-get(9))
+)/get(0),1)
+:
+put(x
+-((scl(ctl(1),-20,20,0,X)-x)*(get(10)-get(9))
++(scl(ctl(2),-20,20,0,X)-x)*(get(11)-get(9))
++(scl(ctl(3),-20,20,0,X)-x)*(get(12)-get(9))
+)/(5000-get(0)),1),
+
+ctl(10)>=5?		// EXPLOSION OUT
+
+put(y
++((scl(ctl(5),20,-20,0,Y)-y)*(get(10)-get(9))
++(scl(ctl(6),20,-20,0,Y)-y)*(get(11)-get(9))
++(scl(ctl(7),20,-20,0,Y)-y)*(get(12)-get(9))
+)/get(8),2)
+:
+put(y
++(y-(scl(ctl(5),-20,20,0,Y))*(get(10)-get(9))
++(y-scl(ctl(6),-20,20,0,Y))*(get(11)-get(9))
++(y-scl(ctl(7),-20,20,0,Y))*(get(12)-get(9))
+)/(5000-get(8)),2)
+
+:c,
+
+				// BLENDING, MAIN PROCESSING INPUT
+tset(
+x,y,z,
+blend(c,
+src(get(1),get(2),z),
+z,ctl(11),
+scl(ctl(15),0,100,0,255)
+)),
+
+ctl(4)==0?		// SOFT ON?
+tget(x,y,z)
+: 
+X>400 & Y>300? 		// ZOOM IN?
+(tget(x+1,y+1,z)+
+tget(x+1,y,z)+
+tget(x,y+1,z)+
+tget(x-1,y-1,z)+
+tget(x-1,y,z)+
+tget(x,y-1,z)+
+tget(x+1,y-1,z)+
+tget(x-1,y+1,z)+
+tget(x,y,z))/5
+:						// ZOOM OUT?
+(tget(x,y,z)+
+tget(x,y,z)+
+tget(x-1,y,z)+
+tget(x,y-1,z))/4
+
+// ******************************************************************************
+
+ForEveryTile:
+{ 
+if (ctl(9)) 				//Did the user click on Reset?
+{ 
+setCtlVal(0,5); setCtlVal(10,5); 
+
+setCtlVal(14,0); setCtlVal(20,0); 
+
+setCtlVal(11,0); setCtlVal(15,100);
+
+setCtlVal(1,0); setCtlVal(2,0); setCtlVal(3,0); 
+setCtlVal(5,0); setCtlVal(6,0); setCtlVal(7,0); 
+
+setCtlVal(9,0); 			//Reset push button
+}
+if (ctl(22))				 //Did the user click on Random?
+{
+rst(clock()); 
+
+ctl(24)?						//CONTROLS
+setCtlVal(0,rnd(1,9)),	setCtlVal(10,rnd(1,9)),
+setCtlVal(1,rnd(-20,20)), setCtlVal(2,rnd(-20,20)), setCtlVal(3,rnd(-20,20)), 
+setCtlVal(5,rnd(-20,20)), setCtlVal(6,rnd(-20,20)), setCtlVal(7,rnd(-20,20))
+:c; 
+
+ctl(25)?	
+setCtlVal(14,rnd(-15,25)), 		// COLOR SHIFT
+setCtlVal(20,rnd(-50,100))		// ACID NOISE
+:c; 	
+
+ctl(26)?
+setCtlVal(11,rnd(0,19)) 		// BLEND MODE
+:c;
+
+ctl(27)?
+setCtlVal(15,rnd(0,100)) 		// OPACITY
+:c;
+
+setCtlVal(22,0); 			//Reset push button
+}
+return false; 				//Leave image as-is
+}
+
+
+A: 
+ctl(8)==0			//APLHA MODE OFF? 
+?
+255
+:
+get(1) >= 0
+& get(1) < X
+& get(2) >= 0
+& get(2) < Y
+?
+ctl(4)==0?			//SOFT MODE ALPHA (NOT WORK)
+255
+:
+255
+:
+0

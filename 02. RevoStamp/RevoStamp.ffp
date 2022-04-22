@@ -1,0 +1,278 @@
+%FFP
+
+Category: "hayabuzo.me" 
+Title: "RotorVator"
+Author: "Sergey Egorov" 
+Copyright: "2016, hayabuzo@gmail.com" 
+Version: "v1.0" 
+Description: "symmetrical effect" 
+About: "www.hayabuzo.me"
+
+Dialog: 
+Size=(435,180), 
+Text="!T Filter !V" ,
+Gradient=(#dad9d7, #c5c5c5, v)
+
+ctl(12): COMBOBOX, "Rotor\nStator", pos=(265,10), val=0, size=(40,*), Action=PREVIEW
+ctl(7):COMBOBOX, "Red\nGreen\nBlue", pos=(308,10), val=0, size=(40,*), Action=PREVIEW
+
+ctl(30): STATICTEXT, Text="Mode:", pos=(240,12)
+ctl(31): STATICTEXT, Text="  ----------------------------------------------------------------------- ", pos=(250,115), size=(150,*)
+
+ctl(28): CHECKBOX, "H-Flip", val=1, pos=(393,127), size=(40,*)
+ctl(29): CHECKBOX, "V-Flip", val=1, pos=(393,142), size=(40,*)
+
+ctl(5):STANDARD(HORZ), Text="X",range=(100,-100),val=0, pos=(255,70), size=(140,12), color=#f99d1c
+ctl(6):STANDARD(HORZ), Text="Y",range=(100,-100),val=0, pos=(255,85), size=(140,12),  color=#f04e23
+ctl(1):STANDARD(HORZ), Text="%",range=(0,100),val=50, pos=(255,100), size=(140,12),  color=#373737
+
+ctl(2):STANDARD(HORZ), Text="H",range=(-100,100),val=0, pos=(255,125), size=(100,12), color=#b82937
+ctl(3):STANDARD(HORZ), Text="V",range=(-100,100),val=0, pos=(255,140), size=(100,12), color=#8d2f45
+
+
+ctl(11): COMBOBOX, "Normal\nDissolve\nThreshold\nThreshold 2\nMultiply\nScreen\nOverlay\nSoft Light\nHard Light\nDodge\nBurn\nDarken\nLighten\nExclusion\nDifference\nNegDif 1\nNegDif 2\nSubtract\nAdd\nExpose", 
+pos=(360,18), val=0, size=(60,*), Action=PREVIEW
+ctl(15): TRACKBAR(TOPTIP) ,range=(0,100),val=100, pos=(355,33), size=(70,15), color=#d8d7d5
+ctl(8): CHECKBOX, "Alpha Mode", val=0, pos=(360,50), Action=PREVIEW//, color=#d5d4d2
+ctl[18]: GROUPBOX, " Blending ", Size=(75,60), pos=(353,5), color=#dad9d7
+
+ctl[23]: GROUPBOX(CENTER), " Random Options ", Size=(104,40), pos=(245,25), color=#D7D6D4
+ctl(24): CHECKBOX, "XY", val=1, pos=(255,37), size=(23,*)
+ctl(25): CHECKBOX, "Shift", val=0, pos=(255,50), size=(26,*)
+ctl(26): CHECKBOX, "Blend", val=0, pos=(285,50), size=(30,*)
+ctl(27): CHECKBOX, "Mode", val=0, pos=(285,37), size=(30,*)
+ctl(32): CHECKBOX, "%", val=1, pos=(320,37), size=(20,*)
+ctl(33): CHECKBOX, "Flip", val=0, pos=(320,50), size=(25,*)
+
+ctl(22): PUSHBUTTON, "Random", pos=(248,160), size=(35,14)
+
+ctl(4): CHECKBOX(PUSHLIKE), "Soft", val=1, pos=(288,160), Action=PREVIEW, size=(25,14)
+ctl(9): PUSHBUTTON, "Reset", pos=(317,160)
+ctl[CTL_OK]: MODIFY, "Apply", pos=(355,160)
+ctl[CTL_CANCEL]: MODIFY, pos=(393,160)
+
+ctl(16): STATICTEXT, Text="www.hayabuzo.me", pos=(155,165), fontcolor=#5c6654
+
+// *****************************************************************************
+
+R,G,B:
+
+ctl(12)==0? // ROTOR
+	put(ctl(5)*512/100,5),
+	put(ctl(6)*M/100,6)
+
+: ctl(12)==1? // STATOR
+	put(ctl(5)*X/100,5),
+	put(ctl(6)*Y/100,6)
+
+: c,
+
+put(ctl(2)*X/100,2),
+put(ctl(3)*Y/100,3),
+
+
+
+
+ctl(28) & ctl(29) ?
+put(src(X-x-1+get(2),Y-y-1+get(3),z),0)
+:
+ctl(28) ?
+put(src(X-x-1+get(2),y+get(3),z),0)
+:
+ctl(29) ?
+put(src(x+get(2),Y-y-1+get(3),z),0)
+:
+put(src(x+get(2),y+get(3),z),0),
+
+put(ctl(7),1),
+
+
+
+
+				// BLENDING, MAIN PROCESSING INPUT
+tset(
+x,y,z,
+blend(c,
+
+
+
+
+ctl(12) == 0? 	// ROTOR MODE ON?
+
+dif(src(x,y,get(1)),
+rad(d+get(5),m+get(6),get(1)))
+<
+scl(ctl(1),100,0,0,255)
+?
+
+src(x,y,z)
+:
+get(0)
+
+
+: ctl(12) == 1?	// STATOR MODE ON?
+
+dif(src(x,y,get(1)),
+src(x+get(5),y+get(6),get(1)))
+<
+scl(ctl(1),100,0,0,255)
+?
+
+src(x,y,z)
+:
+get(0)
+
+:c
+
+
+
+,
+z,ctl(11),
+scl(ctl(15),0,100,0,255)
+)),
+
+ctl(4)==0?		// SOFT ON?
+tget(x,y,z)
+: 
+X>400 & Y>300? 		// ZOOM IN?
+(tget(x+1,y+1,z)+
+tget(x+1,y,z)+
+tget(x,y+1,z)+
+tget(x-1,y-1,z)+
+tget(x-1,y,z)+
+tget(x,y-1,z)+
+tget(x+1,y-1,z)+
+tget(x-1,y+1,z)+
+tget(x,y,z))/5
+:						// ZOOM OUT?
+(tget(x,y,z)+
+tget(x,y,z)+
+tget(x-1,y,z)+
+tget(x,y-1,z))/4
+
+
+
+
+// ******************************************************************************
+
+ForEveryTile:
+{ 
+if (ctl(9)) 				//Did the user click on Reset?
+{ 
+
+setCtlVal(28,1);	// FLIP
+setCtlVal(29,1);
+ 
+setCtlVal(5,0); //X
+setCtlVal(6,0); //Y
+setCtlVal(1,50); //%
+
+
+setCtlVal(2,0); //H
+setCtlVal(3,0); //V
+
+setCtlVal(11,0); //BLEND
+setCtlVal(15,100); //OPACITY
+
+//RANDOM OPTIONS
+
+//setCtlVal(24,1); 
+//setCtlVal(26,1); 
+//setCtlVal(32,1);
+ 
+//setCtlVal(25,0); 
+//setCtlVal(27,0); 
+//setCtlVal(33,0); 
+
+
+setCtlVal(9,0); 			//Reset push button
+
+}
+if (ctl(22))				 //Did the user click on Random?
+{
+rst(clock()); 
+
+ctl(24)?						//XY
+
+setCtlVal(5,rnd(-100,100)),
+setCtlVal(6,rnd(-100,100))
+
+:c; 
+
+ctl(25)?						// SHIFT
+
+setCtlVal(2,rnd(-100,100)), 		
+setCtlVal(3,rnd(-100,100))	
+	
+:c; 	
+
+ctl(26)?
+
+setCtlVal(11,rnd(0,19)), 		// BLEND MODE
+setCtlVal(15,rnd(0,100)) 		// OPACITY
+
+:c;
+
+ctl(27)?						// MODE
+
+setCtlVal(12,rnd(0,1)), 	
+setCtlVal(7,rnd(0,2)) 
+	
+:c;
+
+ctl(32)?
+
+setCtlVal(1,rnd(0,100)) 		// %
+
+:c;
+
+ctl(33)?
+
+setCtlVal(28,rnd(0,1)), 		// FLIP
+setCtlVal(29,rnd(0,1))
+
+:c;
+
+
+setCtlVal(22,0); 			//Reset push button
+
+}
+return false; 				//Leave image as-is
+}
+
+
+A: 
+
+ctl(8)==0			//APLHA MODE OFF? 
+?
+255
+:
+
+
+ctl(12) == 0? 	// ROTOR MODE ON?
+
+dif(src(x,y,get(1)),
+rad(d+get(5),m+get(6),get(1)))
+<
+scl(ctl(1),100,0,0,255)
+?
+
+0
+:
+255
+
+
+: ctl(12) == 1?	// STATOR MODE ON?
+
+dif(src(x,y,get(1)),
+src(x+get(5),y+get(6),get(1)))
+<
+scl(ctl(1),100,0,0,255)
+?
+
+0
+:
+255
+
+:c
+
