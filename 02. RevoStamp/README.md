@@ -2,7 +2,7 @@
 
 ![image](https://user-images.githubusercontent.com/38255514/164621297-7140cc40-3731-4a3c-a37c-82723d3e6862.png)
 
-**RevoStamp** is a self-referencing displacement filter with fine tuning.
+**RevoStamp** is a self-referencing threshold stamping filter with fine tuning.
 
 🖼 [Image Gallery](https://www.behance.net/gallery/32503687/Schwimmanleger)
 
